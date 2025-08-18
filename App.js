@@ -5,6 +5,7 @@ import Header from "./components/Header";
 import Body from "./components/Body";
 import CardDetails from './components/Card_Details';
 import FormDetails from './components/Form_Details';
+import ProductDetails from './components/Product_Details';
 
 function App() {
   return (

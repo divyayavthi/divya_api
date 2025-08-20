@@ -1,64 +1,80 @@
-//   fetch() --> function for sending http methods
-// we can get requested data  inside the then()
-// so we can get that through the response
-// we are getting json data but response dont know what is the data type so
-// we should tell that data  response.json()
-// this is arrow function so it is return the value and we can get from another then
-// then((json)) -->get json data so using this set the value for the setproduct
-import { useEffect, useState } from "react";
-import { Typography, TextField, Button } from "@mui/material";
+import {useEffect, useState} from "react";
+import {TextField, Button,} from "@mui/material";
 const ProductDetails = () => {
-  // fetching data from api
-  // product showing data to table
   const [products, setproducts] = useState([]);
+  const [newId, setNewId] = useState("");
   const [newTitle, setNewTitle] = useState("");
   const [newPrice, setNewPrice] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newCategory, setNewCategory] = useState("");
-  //  data fetching from api end point
-  //  data showed after ui component loaded
-
+  const [newImage, setNewImage] = useState("");
   useEffect(() => {
     fetch("https://fakestoreapi.com/products")
       .then((res) => res.json())
       .then((result) => {
         setproducts(result);
       });
-  }, []);
-
-  function addProducts(){
-    // these are keys
-    const title =newTitle.trim();
-    const price =newPrice.trim();
-    const description =newDescription.trim();
-    const category =newCategory.trim();
-
-    if(title && price && description && category){
-      fetch('https://fakestoreapi.com/products',
-        // should be in object form
-        // should tell fetch function what method 
-        // 
-        {
-          method:"POST",
-          body:JSON.stringify({
-            title,price,description,category
-          }),
-          // server should understand what kind of data 
-          // ('Content-Type': 'application/json'; chartset=UTF-8 )
-          headers:{
-            'Content-Type': 'application/json' 
-          }
-              // we get the response in then function
-              // response may be in text format so we should convert it
-      }).then((response)=>response.json())
-      // we can get that Json data to this then via data variable
-      .then (data=>{
-        setproducts([...products,data])
-        console.log("data is added")
-      })
-    }
+  },[]);
+  function addProducts() {
+    const id = newId.trim();
+    const title = newTitle.trim();
+    const price = newPrice.trim();
+    const description = newDescription.trim();
+    const category = newCategory.trim();
+    const image = newImage.trim();
+    fetch("https://fakestoreapi.com/products", {
+      method: "POST",
+      body: JSON.stringify({
+        id,title,price,description,category,image,}),
+      headers: {
+        "Content-Type": "application/json; charset=UTF-8",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setproducts([...products, data]);
+        console.log("Data added");
+      });
   }
-  // [] because of this empty array => useEffect calls only one time
+  function onChangeHandler(id, key, value) {
+    setproducts((products) => {
+      return products.map((product) => {
+        return product.id === id ? { ...product, [key]: value } : product;
+      });
+    });
+  }
+  function updateProduct(id) {
+    const product = products.find((product) => product.id === id);
+    const updatedProduct = {
+      id: id,
+      title: product.title,
+      price: product.price,
+      description: product.description,
+      category: product.category,
+      image: product.image,
+    };
+    fetch(`https://fakestoreapi.com/products/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(updatedProduct),
+      headers: {
+        "Content-Type": "application/json; charset=UTF-8",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {});
+  }
+  function deleteProduct(id) {
+    fetch(`https://fakestoreapi.com/products/${id}`, {
+      method: "DELETE",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setproducts((products) => {
+          return products.filter((products) => products.id !== id);
+        });
+        console.log("products deleted successfully");
+      });
+  }
   return (
     <div className="ProductDetails">
       <table>
@@ -69,38 +85,67 @@ const ProductDetails = () => {
             <th>Price</th>
             <th>Description</th>
             <th>Category</th>
+            <th>Image</th>
             <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {products.map((product) => (
-            <tr key={product.id}>
+          {products.map((product, index) => (
+            <tr key={index}>
               <td>{product.id}</td>
               <td>{product.title}</td>
               <td>{product.price}</td>
               <td>
                 <TextField
-                  label=""
+                  label="Description"
                   multiline
                   rows={2}
                   variant="outlined"
                   defaultValue={product.description}
+                  onChange={(e) =>onChangeHandler(product.id, "description", e.target.value)}/>
+              </td>
+              <td>{product.category}</td>
+              <td>
+                <img
+                  alt="product image"
+                  src={product.image}
+                  height={150}
+                  width={100}
                 />
               </td>
-                <td>{product.category }</td>
+
               <td>
-                <Button variant="contained" color="primary">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => updateProduct(product.id)}
+                >
                   Update
                 </Button>{" "}
               </td>
-              <td><Button variant="contained" color="red">
-                Delete
-              </Button></td>
+              <td>
+                <Button
+                  variant="contained"
+                  color="red"
+                  onClick={() => deleteProduct(product.id)}
+                >
+                  Delete
+                </Button>
+              </td>
             </tr>
           ))}
         </tbody>
         <tfoot>
           <tr>
+            <td>
+              <TextField
+                label="Id"
+                placeholder="Enter Id"
+                variant="outlined"
+                value={newId}
+                onChange={(e) => setNewId(e.target.value)}
+              />
+            </td>
             <td>
               <TextField
                 label="Tile"
@@ -128,13 +173,21 @@ const ProductDetails = () => {
                 onChange={(e) => setNewDescription(e.target.value)}
               />
             </td>
-             <td>
+            <td>
               <TextField
                 label="Category"
-                placeholder="Enter Description"
+                placeholder="Enter Category "
                 variant="outlined"
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
+              />
+            </td>
+            <td>
+              <TextField
+                type="file"
+                variant="outlined"
+                value={newImage}
+                onChange={(e) => setNewImage(e.target.value)}
               />
             </td>
             <td>
@@ -149,4 +202,3 @@ const ProductDetails = () => {
   );
 };
 export default ProductDetails;
-

@@ -1,5 +1,6 @@
-import {useEffect, useState} from "react";
-import {TextField, Button,} from "@mui/material";
+import { useEffect, useState } from "react";
+import { TextField, Button } from "@mui/material";
+import { Link } from "react-router-dom";
 const ProductDetails = () => {
   const [products, setproducts] = useState([]);
   const [newId, setNewId] = useState("");
@@ -14,7 +15,8 @@ const ProductDetails = () => {
       .then((result) => {
         setproducts(result);
       });
-  },[]);
+  }, []);
+
   function addProducts() {
     const id = newId.trim();
     const title = newTitle.trim();
@@ -25,7 +27,13 @@ const ProductDetails = () => {
     fetch("https://fakestoreapi.com/products", {
       method: "POST",
       body: JSON.stringify({
-        id,title,price,description,category,image,}),
+        id,
+        title,
+        price,
+        description,
+        category,
+        image,
+      }),
       headers: {
         "Content-Type": "application/json; charset=UTF-8",
       },
@@ -75,6 +83,20 @@ const ProductDetails = () => {
         console.log("products deleted successfully");
       });
   }
+
+  // add to cart
+
+  function addProducttocart(id) {
+    const cart = { userId: 1, products: [{ id: id }] };
+    fetch("https://fakestoreapi.com/carts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cart),
+    })
+      .then((response) => response.json())
+      .then((data) => console.log(data));
+  }
+
   return (
     <div className="ProductDetails">
       <table>
@@ -102,7 +124,10 @@ const ProductDetails = () => {
                   rows={2}
                   variant="outlined"
                   defaultValue={product.description}
-                  onChange={(e) =>onChangeHandler(product.id, "description", e.target.value)}/>
+                  onChange={(e) =>
+                    onChangeHandler(product.id, "description", e.target.value)
+                  }
+                />
               </td>
               <td>{product.category}</td>
               <td>
@@ -126,10 +151,19 @@ const ProductDetails = () => {
               <td>
                 <Button
                   variant="contained"
-                  color="red"
+                  color="error"
                   onClick={() => deleteProduct(product.id)}
                 >
                   Delete
+                </Button>
+              </td>
+              <td>
+                <Button
+                  variant="contained"
+                  color="red"
+                  onClick={() => addProducttocart(product.id)}
+                >
+                  Add To Cart
                 </Button>
               </td>
             </tr>
@@ -202,3 +236,5 @@ const ProductDetails = () => {
   );
 };
 export default ProductDetails;
+
+
